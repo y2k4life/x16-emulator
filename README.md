@@ -1,414 +1,181 @@
-# Commander X16 Emulator
-
-This is an emulator for the Commander X16 computer system. It only depends on SDL2 and should compile on all modern operating systems.
+# Building Emulator for the Commander X16 8-bit computer
 
-## Binaries & Compiling
-
-<a href="https://travis-ci.org/commanderx16/x16-emulator"><img alt="Travis (.org)" src="https://img.shields.io/travis/commanderx16/x16-emulator.svg?label=CI&logo=travis&logoColor=white&style=for-the-badge"></a>
-
-Binary releases for macOS, Windows and x86_64 Linux are available on the [releases page](https://github.com/commanderx16/x16-emulator/releases).
-
-To build the emulator you will need the SDL2 development package along with the [cc65](https://cc65.github.io/) assembler.  On RedHat based nodes these are provided by the SDL2-devel and cc65 packages (yum install SDL2-devel cc65).
+Below are instructions on building the  X16 8-bit computer emulator using linux. This was tested using Windows Subsystem for Linux. The following steps are base on Ubuntu 18. These steps also assume the build process is done int the home directory `~`.
 
-Steps for compiling WebAssembly/HTML5 can be found [here](webassembly/WebAssembly.md).
+This build process will work with Windows Subsystem for Linux.
 
-You will also need the system ROM (`rom.bin`) which you can build from the [X16 ROM source](https://github.com/commanderx16/x16-rom) or take from the *latest* binary release. (It is not always guaranteed though that the latest binary release is compatible with the current state of the emulator source.)
+## Prepare build environment
 
-Type `make` to build the source.
+Make sure your Linux install is update to date
 
-## Starting
+``` shell
+sudo apt-get update
+sudo apt-get upgrade
+```
 
-You can start `x16emu`/`x16emu.exe` either by double-clicking it, or from the command line. The latter allows you to specify additional arguments.
+Install development tools and zip (zip is used for packaging).
 
-* When starting `x16emu` without arguments, it will pick up the system ROM (`rom.bin`) from the executable's directory.
-* The system ROM filename/path can be overridden with the `-rom` command line argument.
-* `-keymap` tells the KERNAL to switch to a specific keyboard layout. Use it without an argument to view the supported layouts.
-* `-sdcard` lets you specify an SD card image (partition table + FAT32).
-* `-prg` lets you specify a `.prg` file that gets injected into RAM after start.
-* `-bas` lets you specify a BASIC program in ASCII format that automatically typed in (and tokenized).
-* `-run` executes the application specified through `-prg` or `-bas` using `RUN` or `SYS`, depending on the load address.
-* `-scale` scales video output to an integer multiple of 640x480
-* `-echo` causes all KERNAL/BASIC output to be printed to the host's terminal. Enable this and use the BASIC command "LIST" to convert a BASIC program to ASCII (detokenize).
-* `-scale` scales video output to an integer multiple of 640x480
-* `-quality` change image scaling algorithm quality
-	* `nearest`: nearest pixel sampling
-	* `linear`: linear filtering
-	* `best`: (default) anisotropic filtering
-* `-log` enables one or more types of logging (e.g. `-log KS`):
-	* `K`: keyboard (key-up and key-down events)
-	* `S`: speed (CPU load, frame misses)
-	* `V`: video I/O reads and writes
-* `-debug` enables the debugger.
-* `-dump` configure system dump (e.g. `-dump CB`):
-	* `C`: CPU registers (7 B: A,X,Y,SP,STATUS,PC)
-	* `R`: RAM (40 KiB)
-	* `B`: Banked RAM (2 MiB)
-	* `V`: Video RAM and registers (128 KiB VRAM, 32 B composer registers, 512 B pallete, 16 B layer0 registers, 16 B layer1 registers, 16 B sprite registers, 2 KiB sprite attributes)
-* When compiled with `WITH_YM2151`, `-sound` can be used to specify the output sound device.
-* When compiled with `#define TRACE`, `-trace` will enable an instruction trace on stdout.
+``` shell
+sudo apt-get install build-essential
+sudo apt-get install zip
+```
 
-Run `x16emu -h` to see all command line options.
+Install [mingw-w64](http://mingw-w64.org/doku.php)
 
-## Keyboard Layout
+``` shell
+sudo apt-get install mingw-w64
+```
 
-The X16 uses a PS/2 keyboard, and the ROM currently supports several different layouts. The following table shows their names, and what keys produce different characters than expected:
+The Commander X16 emulator requires [SDL2](https://www.libsdl.org/). The following steps will install SDL2.
 
-|Name  |Description 	       |Differences|
-|------|------------------------|-------|
-|en-us |US		       |[`] ⇒ [←], [~] ⇒ [π], [&#92;] ⇒ [£]|
-|en-gb |United Kingdom	       |[`] ⇒ [←], [~] ⇒ [π]|
-|de    |German		       |[§] ⇒ [£], [´] ⇒ [^], [^] ⇒ [←], [°] ⇒ [π]|
-|nordic|Nordic                 |key left of [1] ⇒ [←],[π]|
-|it    |Italian		       |[&#92;] ⇒ [←], [&vert;] ⇒ [π]|
-|pl    |Polish (Programmers)   |[`] ⇒ [←], [~] ⇒ [π], [&#92;] ⇒ [£]|
-|hu    |Hungarian	       |[&#92;] ⇒ [←], [&vert;] ⇒ [π], [§] ⇒ [£]|
-|es    |Spanish		       |[&vert;] ⇒ π, &#92; ⇒ [←], Alt + [<] ⇒ [£]|
-|fr    |French		       |[²] ⇒ [←], [§] ⇒ [£]|
-|de-ch |Swiss German	       |[^] ⇒ [←], [°] ⇒ [π]|
-|fr-be |Belgian French	       |[²] ⇒ [←], [³] ⇒ [π]|
-|fi    |Finnish		       |[§] ⇒ [←], [½] ⇒ [π]|
-|pt-br |Portuguese (Brazil ABNT)|[&#92;] ⇒ [←], [&vert;] ⇒ [π]|
+``` shell
+wget https://www.libsdl.org/release/SDL2-devel-2.0.10-mingw.tar.gz
+tar -xf SDL2-devel-2.0.10-mingw.tar.gz
+cd SDL2-2.0.10
+sudo make native
+cd ..
+```
 
-Keys that produce international characters (like [ä] or [ç]) will not produce any character.
+To build the ROMs for Commander X16 emulator requires the [cc65 compiler](https://cc65.github.io/)
 
-Since the emulator tells the computer the *position* of keys that are pressed, you need to configure the layout for the computer independently of the keyboard layout you have configured on the host.
+``` shell
+git clone https://github.com/cc65/cc65.git
+cd cc65
+make bin
+sudo make avail
+cd ..
+```
 
-**Use the F9 key to cycle through the layouts, or set the keyboard layout at startup using the `-keymap` command line argument.**
+(optional) If you want to package the build you will need to build the documentation. To build the documentation you will need [pandoc](https://pandoc.org/). For Ubuntu You will need to get these tools directly from the developer. If you are using a different linux distro confirm the package is 2.0 version.
 
-The following keys can be used for controlling games:
+``` shell
+wget https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb
+sudo dpkg -i pandoc-2.7.3-1-amd64.deb
+```
 
-|Keyboard Key  | NES Equivalent |
-|--------------|----------------|
-|Ctrl          | A 		|
-|Alt 	       | B		|
-|Space         | SELECT         |
-|Enter         | START		|
-|Cursor Up     | UP		|
-|Cursor Down   | DOWN		|
-|Cursor Left   | LEFT		|
-|Cursor Right  | RIGHT		|
+## Building Emulator
 
-## Functions while running
+Create a directory to organize the pieces of the Commander x16 emulator.
 
-* Ctrl + R will reset the computer.
-* Ctrl + V will paste the clipboard by injecting key presses.
-* Ctrl + S will save a system dump (configurable with `-dump`) to disk.
-* Ctrl + Return will toggle full screen mode.
+``` shell
+mkdir commander-x16
+cd commander-x16
+```
 
-On the Mac, use the Cmd key instead.
+Clone the ROMs from Commander X16 repository.
 
-## BASIC and the Screen Editor
+``` shell
+git clone https://github.com/commanderx16/x16-rom.git
+```
 
-On startup, the X16 presents direct mode of BASIC V2. You can enter BASIC statements, or line numbers with BASIC statements and `RUN` the program, just like on Commodore computers.
+Clone the Commander x16 emulator. The instructions below clones the source from this repository. This might be outdated. If you choose to clone from the Commander x16 repository the Makefile and main.c file will need to by patched, see below.
 
-* To stop execution of a BASIC program, hit the RUN/STOP key (Esc in the emulator), or Ctrl + C.
-* To insert a character, press Shift + Backspace.
-* To clear the screen, press Shift + Home.
-* The X16 does not have a STOP+RESTORE function.
+``` shell
+git clone https://github.com/y2k4life/x16-emulator.git
+```
 
-## Host Filesystem Interface
+(optional) To package the build you will need the documentation.
 
-If the system ROM contains any version of the KERNAL, the LOAD (`$FFD5`) and SAVE (`$FFD8`) KERNAL calls are intercepted by the emulator if the device is 1 (which is the default). So the BASIC statements
+``` shell
+git clone https://github.com/commanderx16/x16-docs.git
+```
 
-      LOAD"$
-      LOAD"FOO.PRG
-      LOAD"IMAGE.PRG",1,1
-      SAVE"BAR.PRG
+To build the emulator two environment variables need to be set
 
-will target the host computer's local filesystem.
+``` shell
+export CROSS_COMPILE_WINDOWS=1
+export CROSS_COMPILE_WITH_LINUX=1
+```
 
-The emulator will interpret filesnames relative to the directory it was started in. Note that on macOS, when double-clicking the executable, this is the home directory.
+To build the ROMs
 
-To avoid incompatibility problems between the PETSCII and ASCII encodings, use lower case filenames on the host side, and unshifted filenames on the X16 side.
+``` shell
+cd x16-rom
+make
+cd ..
+```
 
-## Dealing with BASIC Programs
+The following command will build the emulator. This will create `x16emu.exe` which can then be copied to a Windows computer e.g Using WSL `cp x16emu.exe /mnt/d/x16emu.exe`.
 
-BASIC programs are encoded in a tokenized form, they are not simply ASCII files. If you want to edit BASIC programs on the host's text editor, you need to convert it between tokenized BASIC form and ASCII.
-
-* To convert ASCII to BASIC, reboot the machine and paste the ASCII text using Ctrl + V (Mac: Cmd + V). You can now run the program, or use the `SAVE` BASIC command to write the tokenized version to disk.
-* To convert BASIC to ASCII, start x16emu with the -echo argument, `LOAD` the BASIC file, and type `LIST`. Now copy the ASCII version from the terminal.
-
-## Using the KERNAL/BASIC environment
-
-Please see the KERNAL/BASIC documentation.
-
-## Debugger
-
-The debugger requires `-debug` to start. Without it it is effectively disabled.
-
-There are 2 panels you can control. The code panel, the top left half, and the data panel, the bottom half of the screen. The displayed address can be changed using keys 0-9 and A-F, in a 'shift and roll' manner (easier to see than explain). To change the data panel address, press the shift key and type 0-9 A-F. The top write panel is fixed.
-
-The debugger keys are similar to the Microsoft Debugger shortcut keys, and work as follows
-
-|Key|Description 																			|
-|---|---------------------------------------------------------------------------------------|
-|F1 |resets the shown code position to the current PC										|
-|F2 |resets the 65C02 CPU but not any of the hardware.										|
-|F5 |is used to return to Run mode, the emulator should run as normal.						|
-|F9 |sets the breakpoint to the currently code position.									|
-|F10|steps 'over' routines - if the next instruction is JSR it will break on return.		|
-|F11|steps 'into' routines.																	|
-|F12|is used to break back into the debugger. This does not happen if you do not have -debug|
-|TAB|when stopped, or single stepping, hides the debug information when pressed 			|
-
-When -debug is selected the No-Operation $FF will break into the debugger automatically.
-
-Effectively keyboard routines only work when the debugger is running normally. Single stepping through keyboard code will not work at present.
-
-## Wiki
-
-https://github.com/commanderx16/x16-emulator/wiki
-
-## Features
-
-* CPU: Full 65C02 instruction set (improved "fake6502")
-* VERA
-	* Mostly cycle exact emulation
-	* Supports almost all features: composer, two layers, sprites, progressive/interlaced
-* VIA
-	* ROM/RAM banking
-	* PS/2 keyboard
-	* SD card (SPI)
-
-## Missing Features
-
-* VERA
-	* Does not support raster IRQs (does support VSYNC though)
-	* Does not support the "CURRENT_FIELD" bit
-	* Does not sprite z-depth, collisions or limitations
-	* Only supports the first 16 sprites
-	* Interlaced modes (NTSC/RGB) don't render at the full horizontal fidelity
-* VIA
-	* Does not support counters/timers/IRQs
-	* Does not support game controllers
-* Sound
-	* No support
-
-## License
-
-Copyright (c) 2019 Michael Steil &lt;mist64@mac.com&gt;, [www.pagetable.com](https://www.pagetable.com/).
-All rights reserved. License: 2-clause BSD
-
-## Known Issues
-
-* Emulator: LOAD"$ (and LOAD"$",1) will show host uppercase filenames as garbage. Use Ctrl+N to switch to the X16 upper/lower character set for a workaround.
-
-## Release Notes
-
-### Release 32
-
-* correct ROM banking
-* VERA emulation optimizations [Stephen Horn]
-* added `-dump` option to allow writing RAM, CPU state or VERA state to disk [Nils Hasenbanck]
-* added `-quality` option to change scaling algorithm; now defaults to "best" [Maurizio Porrato]
-* output of `-echo` can now be fed into UNIX pipes [Anonymous Maarten]
-* relative speed of emulator is shown in the title if host can't keep up [Rien]
-* fix: 6502 BCD arithmetic [Rien]
-* fix: colors (white is now white) [Rien]
-* fix: sprite flipping [jjbliss]
-
-### Release 31
-
-* VERA 0.8 register layout
-* removed "-char" (character ROM is now part of rom.bin)
-* GIF recording using -gif [Neil Forbes-Richardson]
-* numpad support [Maurizio Porrato]
-* fake support of VIA timers to work around BASIC RND(0)
-* default ROM is taken from executable's directory [Michael Watters]
-* emulator window has a title [Michael Watters]
-* -debug allows specifying a breakpoint [Frank Buss]
-* package contains the ROM symbols in rom.txt
-* support for VERA SPI
-
-### Release 30
-
-Emulator:
-* VERA can now generate VSYNC interrupts
-* added -keymap for setting the keyboard layout
-* added -scale for integer scaling of the window [Stephen Horn]
-* added -log to enable various logging features (can also be enabled at runtime (POKE $9FB0+) [Randall Bohn])
-* changed -run to be an option to -prg and -bas
-* emulator detection: read $9FBE/$9FBF, must read 0x31 and 0x36
-* fix: -prg and -run no longer corrupt BASIC programs.
-* fix: LOAD,1 into RAM bank [Stephen Horn]
-* fix: 2bpp and 4bpp drawing [Stephen Horn]
-* fix: 4bpp sprites [MonstersGoBoom]
-* fix: build on Linux/ARM
-
-### Release 29
-
-* better keyboard support: if you pretend you have a US keyboard layout when typing, all keys should now be reachable [Paul Robson]
-* -debug will enable the new debugger [Paul Robson]
-* runs at the correct speed (was way too slow on most machines)
-* keyboard shortcuts work on Windows/Linux: Ctrl + F/R/S/V
-* Ctrl + V pastes the clipboard as keypresses
-* -bas file.txt loads a BASIC program in ASCII encoding
-* -echo prints all BASIC/KERNAL output to the terminal, use it with LIST to convert a BASIC program to ASCII
-* -run acts like -prg, but also autostarts the program
-* JMP $FFFF and SYS 65535 exit the emulator and save memory the host's storage
-* the packages now contain the current version of the Programmer's Reference Guide (HTML)
-* fix: on Windows, some file load/saves may be been truncated
-
-### Release 28
-
-* support for 65C02 opcodes [Paul Robson]
-* keep aspect ratio when resizing window [Sebastian Voges]
-* updated sprite logic to VERA 0.7 – **the layout of the sprite data registers has changed, you need to change your code!**
-
-
-### Release 27
-
-* Command line overhaul. Supports `-rom`, `-char`, `-sdcard` and `-prg`.
-* ROM and char filename defaults, so x16emu can be started without arguments.
-* Host Filesystem Interface supports LOAD"$"
-* macOS and Windows packaging logic in Makefile
-
-### Release 26
-
-* better sprite support (clipping, palette offset, flipping)
-* better border support
-* KERNAL can set up interlaced NTSC mode with scaling and borders (compile time option)
-
-### Release 25
-
-* sdcard: fixed LOAD,x,1 to load to the correct addressg
-* sdcard: all temp data will be on bank #255; current bank will remain unchanged
-* DOS: support for DOS commands ("UI", "I", "V", ...) and more status messages (e.g. 26,WRITE PROTECT ON,00,00)
-* BASIC: "DOS" command. Without argument: print disk status; with "$" argument: show directory; with "8" or "9" argument: switch default drive; otherwise: send DOS command; also accessible through F7/F8
-* Vera: cycle exact rendering, NTSC, interlacing, border
-
-### Release 24
-
-* SD card support
-	* pass path to SD card image as third argument
-	* access SD card as drive 8
-	* the local PC/Mac disk is still drive 1
-	* modulo debugging, this would work on a real X16 with the SD card (plus level shifters) hooked up to VIA#2PB as described in sdcard.c in the emulator surce
-
-### Release 23
-
-* Updated emulator and ROM to spec 0.6 – the ROM image should work on a real X16 with VERA 0.6 now.
-
-### Release 22
-
-SYS65375 (SWAPPER) now also clears the screen, avoid ing side effects.
-
-### Release 21
-
-* support for $ and % number prefixes in BASIC
-* support for C128 KERNAL APIs LKUPLA, LKUPSA and CLOSE_ALL
-
-### Release 20
-
-* Toggle fullscreen using Cmd+F or Cmd+return
-* new BASIC instructions and functions:
-	* MON: enter monitor; no more SYS65280 required
-	* VPEEK(bank, address)
-	* VPOKE bank, address, value
-example: VPOKE4,0,VPEEK(4,0) OR 32 [for 256 color BASIC]
-
-### Release 19
-
-* fixed cursor trail bug
-* fixed f7 key in PS/2 driver
-* f keys are assigned with shortcuts now:
-F1: LIST
-F2: &lt;enter monitor&gt;
-F3: RUN
-F4: &lt;switch 40/80&gt;
-F5: LOAD
-F6: SAVE"
-F7: DOS"$ &lt;doesn't work yet&gt;
-F8: DOS &lt;doesn't work yet&gt;
-
-### Release 18
-
-* Fixed scrolling in 40x30 mode when there are double lines on the screen.
-
-### Release 17
-
-* video RAM support in the monitor (SYS65280)
-* 40x30 screen support (SYS65375 to toggle)
-
-### Release 16
-
-* Integrated monitor, start with SYS65280
-rom.bin is now 3*8 KB:
-	* 0: BASIC (bank 0 at $C000)
-	* 1: KERNAL ($E000)
-	* 2: UTIL (bank 1 at $C000)
-
-### Release 15
-
-* correct text mode video RAM layout both in emulator and KERNAL
-
-### Release 14
-
-* KERNAL: fast scrolling
-* KERNAL: upper/lower switching using CHR$($0E)/CHR$($8E)
-* KERNAL: banking init
-* KERNAL: new PS/2 driver
-* Emulator: VERA updates (more modes, second data port)
-* Emulator: RAM and ROM banks start out as all 1 bits
-
-### Release 13
-
-* Supports mode 7 (8bpp bitmap).
-
-### Release 12
-
-* Supports 8bpp tile mode (mode 4)
-
-### Release 11
-
-* The emulator and the KERNAL now speak the bit-level PS/2 protocol over VIA#2 PA0/PA1. The system behaves the same, but keyboard input in the ROM should work on a real device.
-
-### Release 10
-
-updated KERNAL with proper power-on message
-
-### Release 9
-
-* LOAD and SAVE commands are intercepted by the emulator, can be used to access local file system, like this:
-
-      LOAD"TETRIS.PRG
-      SAVE"TETRIS.PRG
-
-* No device number is necessary. Loading absolute works like this:
-
-      LOAD"FILE.PRG",1,1
-
-### Release 8
-
-* New optional override load address for PRG files:
-
-      ./x64emu rom.bin chargen.bin basic.prg,0401
-
-### Release 7
-
-* Now with banking. POKE40801,n to switch the RAM bank at $A000. POKE40800,n to switch the ROM bank at $C000. The ROM file at the command line can be up to 72 KB now (layout: 0: bank 0, 1: KERNAL, 2: bank 1, 3: bank 2 etc.), and the RAM that Cmd+S saves is 2088KB ($0000-$9F00: regular RAM, $9F00-$9FFF: unused, $A000+: extra banks)
-
-### Release 6
-
-* Vera emulation now matches the complete spec dated 2019-07-06: correct video address space layout, palette format, redefinable character set
-
-### Release 5
-
-* BASIC now starts at $0401 (39679 BASIC BYTES FREE)
-
-### Release 4
-
-* Cmd+S now saves all of memory (linear 64 KB for now, including ROM) to "memory.bin", "memory-1.bin", "memory-2.bin", etc. You can extract parts of it with Unix "dd", like: dd if=memory.bin of=basic.bin bs=1 skip=2049 count=38655
-
-### Release 3
-
-* Supports PRG file as third argument, which is injected after "READY.", so BASIC programs work as well.
-
-### Release 2
-
-* STOP key support
-
-### Release 1
-
-* 6502 core, fake PS/2 keyboard emulation (PS/2 data bytes appear at VIA#1 PB) and text mode Vera emulation
-* KERNAL/BASIC modified for memory layout, missing VIC, Vera text mode and PS/2 keyboard
+``` shell
+cd x16-emulator
+make
+cd ..
+```
+
+To package the emulator. This will create the x16emu_win.zip which can be copied to the host Windows computer e.g `cp x16emu.exe /mnt/d/x16emu_win.zip`.
+
+``` shell
+cd x16-rom
+make package_win
+cd ..
+```
+
+## Changes made to original repository
+
+### Compile error
+
+There is an error when compiling I don't know why this happens, but I know how to fix it.
+
+``` output
+main.c: In function ‘SDL_main’:
+main.c:457:13: error: implicit declaration of function ‘tolower’
+[-Werror=implicit-function-declaration]
+     switch (tolower(*p)) {
+             ^~~~~~~
+cc1: all warnings being treated as errors
+Makefile:59: recipe for target 'main.o' failed
+make: *** [main.o] Error 1
+```
+
+Run the following command to fix it
+
+``` shell
+cd x16-emulator
+sed -i '/#include <limits.h>/a #include <ctype.h>' main.c
+cd ..
+```
+
+### Makefile
+
+A new environment variable is created `CROSS_COMPILE_WITH_LINUX` to indicate the building process is using Linux. This along with `CROSS_COMPILE_WINDOWS` will indicate building the Windows version on a Linux system and not building on a Mac.
+
+Change the location of where Ming232 and SDL2 are located.
+
+``` Makefile
+ifeq ($(CROSS_COMPILE_WITH_LINUX),1)
+        MINGW32=/usr/i686-w64-mingw32
+        WIN_SDL2=/usr
+else
+        # the mingw32 path on macOS installed through homebrew
+        MINGW32=/usr/local/Cellar/mingw-w64/6.0.0_2/toolchain-i686/i686-w64-mingw32
+        # the Windows SDL2 path on macOS installed through ./configure --prefix=... && make && make install
+        WIN_SDL2=~/tmp/sdl2-win32
+endif
+```
+
+Change the output file name to include `.exe`.
+
+``` Makefile
+ifeq ($(CROSS_COMPILE_WINDOWS),1)
+        OUTPUT=x16emu.exe
+else
+        OUTPUT=x16emu
+endif
+```
+
+Comment command to copy files that don't exist. The processes still works without these files
+
+``` Makefile
+package_win:
+        (cd ../x16-rom/; make clean all)
+        CROSS_COMPILE_WINDOWS=1 make clean all
+        rm -rf $(TMPDIR_NAME) x16emu_win.zip
+        mkdir $(TMPDIR_NAME)
+        cp x16emu.exe $(TMPDIR_NAME)
+#       cp $(MINGW32)/lib/libgcc_s_sjlj-1.dll $(TMPDIR_NAME)/
+#       cp $(MINGW32)/bin/libwinpthread-1.dll $(TMPDIR_NAME)/
+        cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
+        $(call add_extra_files_to_package)
+        (cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
+```

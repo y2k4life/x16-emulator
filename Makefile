@@ -1,8 +1,12 @@
-
-# the mingw32 path on macOS installed through homebrew
-MINGW32=/usr/local/Cellar/mingw-w64/6.0.0_2/toolchain-i686/i686-w64-mingw32
-# the Windows SDL2 path on macOS installed through ./configure --prefix=... && make && make install
-WIN_SDL2=~/tmp/sdl2-win32
+ifeq ($(CROSS_COMPILE_WITH_LINUX),1)
+	MINGW32=/usr/i686-w64-mingw32
+	WIN_SDL2=/usr
+else
+	# the mingw32 path on macOS installed through homebrew
+	MINGW32=/usr/local/Cellar/mingw-w64/6.0.0_2/toolchain-i686/i686-w64-mingw32
+	# the Windows SDL2 path on macOS installed through ./configure --prefix=... && make && make install
+	WIN_SDL2=~/tmp/sdl2-win32
+endif
 
 ifeq ($(CROSS_COMPILE_WINDOWS),1)
 	SDL2CONFIG=$(WIN_SDL2)/bin/sdl2-config
@@ -13,7 +17,11 @@ endif
 CFLAGS=-std=c99 -O3 -Wall -Werror -g $(shell $(SDL2CONFIG) --cflags) -Iextern/include -Iextern/src
 LDFLAGS=$(shell $(SDL2CONFIG) --libs) -lm
 
-OUTPUT=x16emu
+ifeq ($(CROSS_COMPILE_WINDOWS),1)
+	OUTPUT=x16emu.exe
+else
+	OUTPUT=x16emu
+endif
 
 ifeq ($(MAC_STATIC),1)
 	LDFLAGS=/usr/local/lib/libSDL2.a -lm -liconv -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox -Wl,-framework,ForceFeedback -lobjc -Wl,-framework,CoreVideo -Wl,-framework,Cocoa -Wl,-framework,Carbon -Wl,-framework,IOKit -Wl,-weak_framework,QuartzCore -Wl,-weak_framework,Metal
@@ -122,8 +130,8 @@ package_win:
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
 	mkdir $(TMPDIR_NAME)
 	cp x16emu.exe $(TMPDIR_NAME)
-	cp $(MINGW32)/lib/libgcc_s_sjlj-1.dll $(TMPDIR_NAME)/
-	cp $(MINGW32)/bin/libwinpthread-1.dll $(TMPDIR_NAME)/
+#	cp $(MINGW32)/lib/libgcc_s_sjlj-1.dll $(TMPDIR_NAME)/
+#	cp $(MINGW32)/bin/libwinpthread-1.dll $(TMPDIR_NAME)/
 	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
 	$(call add_extra_files_to_package)
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)

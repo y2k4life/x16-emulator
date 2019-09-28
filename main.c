@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#include <ctype.h>
 #include "cpu/fake6502.h"
 #include "disasm.h"
 #include "memory.h"
