@@ -90,7 +90,7 @@ export CROSS_COMPILE_WITH_LINUX=1
 To build the ROMs
 
 ``` shell
-cd x16-rom
+cd x16-emulator
 make
 cd ..
 ```
@@ -106,7 +106,7 @@ cd ..
 To package the emulator. This will create the x16emu_win.zip which can be copied to the host Windows computer e.g `cp x16emu.exe /mnt/d/x16emu_win.zip`.
 
 ``` shell
-cd x16-rom
+cd x16-emulator
 make package_win
 cd ..
 ```
