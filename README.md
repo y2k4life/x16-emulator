@@ -1,8 +1,6 @@
-# Building Emulator for the Commander X16 8-bit computer
+# Building emulator for Windows on Linux
 
-Below are instructions on building the  X16 8-bit computer emulator using linux. This was tested using Windows Subsystem for Linux. The following steps are base on Ubuntu 18. These steps also assume the build process is done int the home directory `~`.
-
-This build process will work with Windows Subsystem for Linux.
+The following instructions are for building the Commander X16 8-bit computer emulator for Windows using Linux. This was tested using Ubuntu Windows Subsystem for Linux along with a Ubuntu installed on a computer. The following steps are base on Ubuntu 18.
 
 ## Prepare build environment
 
