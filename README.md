@@ -85,10 +85,16 @@ export CROSS_COMPILE_WINDOWS=1
 export CROSS_COMPILE_WITH_LINUX=1
 ```
 
+For sound using the YM2151 set the following environment variable
+
+``` shell
+export WITH_YM2151=1
+```
+
 To build the ROMs
 
 ``` shell
-cd x16-emulator
+cd x16-rom
 make
 cd ..
 ```
