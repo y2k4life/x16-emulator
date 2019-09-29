@@ -66,7 +66,7 @@ Clone the ROMs from Commander X16 repository.
 git clone https://github.com/commanderx16/x16-rom.git
 ```
 
-Clone the Commander x16 emulator. The instructions below clones the source from this repository. This might be outdated. If cloning from the Commander X16 repository the Makefile and main.c file will need to by patched, see below.
+Clone the Commander x16 emulator. The instructions below clones the source from this repository. This might be outdated. If cloning from the Commander X16 repository the Makefile and main.c file will need to be patched, see below.
 
 ``` shell
 git clone https://github.com/y2k4life/x16-emulator.git
@@ -132,19 +132,17 @@ Makefile:59: recipe for target 'main.o' failed
 make: *** [main.o] Error 1
 ```
 
-Run the following command:
+Run the following command in the `x16-emulator` folder:
 
 ``` shell
-cd x16-emulator
 sed -i '/#include <limits.h>/a #include <ctype.h>' main.c
-cd ..
 ```
 
 ### Makefile
 
 A new environment variable is created `CROSS_COMPILE_WITH_LINUX` to indicate the building process is using Linux. This along with `CROSS_COMPILE_WINDOWS` will indicate building the Windows version on a Linux system and not building on a Mac.
 
-Change the location of where Ming32 and SDL2 are located.
+Change the location of where mingw-w64 and SDL2 are located.
 
 ``` Makefile
 ifeq ($(CROSS_COMPILE_WITH_LINUX),1)
