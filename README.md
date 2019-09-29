@@ -4,7 +4,7 @@ The following instructions are for building the Commander X16 8-bit computer emu
 
 ## Prepare build environment
 
-Make sure your Linux install is update to date
+Make sure Linux is update to date
 
 ``` shell
 sudo apt-get update
@@ -44,7 +44,7 @@ sudo make avail
 cd ..
 ```
 
-(optional) If you want to package the build you will need to build the documentation. To build the documentation you will need [pandoc](https://pandoc.org/). For Ubuntu You will need to get these tools directly from the developer. If you are using a different linux distro confirm the package is 2.0 version.
+(optional) To package the build [pandoc](https://pandoc.org/) is required. For Ubuntu `pandoc` will need to be downloaded directly from the developer. For other linux distros confirm the `pandoc` package is 2.0 version.
 
 ``` shell
 wget https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb
@@ -53,7 +53,7 @@ sudo dpkg -i pandoc-2.7.3-1-amd64.deb
 
 ## Building Emulator
 
-Create a directory to organize the pieces of the Commander x16 emulator.
+Create a directory to organize the pieces of the Commander X16 emulator.
 
 ``` shell
 mkdir commander-x16
@@ -66,13 +66,13 @@ Clone the ROMs from Commander X16 repository.
 git clone https://github.com/commanderx16/x16-rom.git
 ```
 
-Clone the Commander x16 emulator. The instructions below clones the source from this repository. This might be outdated. If you choose to clone from the Commander x16 repository the Makefile and main.c file will need to by patched, see below.
+Clone the Commander x16 emulator. The instructions below clones the source from this repository. This might be outdated. If cloning from the Commander X16 repository the Makefile and main.c file will need to by patched, see below.
 
 ``` shell
 git clone https://github.com/y2k4life/x16-emulator.git
 ```
 
-(optional) To package the build you will need the documentation.
+(optional) To package the build the Commander X16 documentation is required.
 
 ``` shell
 git clone https://github.com/commanderx16/x16-docs.git
@@ -113,7 +113,7 @@ cd ..
 
 ### Compile error
 
-There is an error when compiling I don't know why this happens, but I know how to fix it.
+How to fix the following error when compiling.
 
 ``` output
 main.c: In function ‘SDL_main’:
@@ -126,7 +126,7 @@ Makefile:59: recipe for target 'main.o' failed
 make: *** [main.o] Error 1
 ```
 
-Run the following command to fix it
+Run the following command:
 
 ``` shell
 cd x16-emulator
@@ -138,7 +138,7 @@ cd ..
 
 A new environment variable is created `CROSS_COMPILE_WITH_LINUX` to indicate the building process is using Linux. This along with `CROSS_COMPILE_WINDOWS` will indicate building the Windows version on a Linux system and not building on a Mac.
 
-Change the location of where Ming232 and SDL2 are located.
+Change the location of where Ming32 and SDL2 are located.
 
 ``` Makefile
 ifeq ($(CROSS_COMPILE_WITH_LINUX),1)
@@ -162,7 +162,7 @@ else
 endif
 ```
 
-Comment command to copy files that don't exist. The processes still works without these files
+Comment command that copies files that don't exist. The processes still works without these files
 
 ``` Makefile
 package_win:
