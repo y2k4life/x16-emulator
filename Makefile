@@ -1,6 +1,6 @@
 ifeq ($(CROSS_COMPILE_WITH_LINUX),1)
 	MINGW32=/usr/i686-w64-mingw32
-	WIN_SDL2=/usr
+	WIN_SDL2=/usr/i686-w64-mingw32
 else
 	# the mingw32 path on macOS installed through homebrew
 	MINGW32=/usr/local/Cellar/mingw-w64/6.0.0_2/toolchain-i686/i686-w64-mingw32
@@ -124,22 +124,58 @@ package_mac:
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_mac.zip" *)
 	rm -rf $(TMPDIR_NAME)
 
-package_win:
+package_win_mac:
 	(cd ../x16-rom/; make clean all)
 	CROSS_COMPILE_WINDOWS=1 make clean all
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
 	mkdir $(TMPDIR_NAME)
 	cp x16emu.exe $(TMPDIR_NAME)
-#	cp $(MINGW32)/lib/libgcc_s_sjlj-1.dll $(TMPDIR_NAME)/
-#	cp $(MINGW32)/bin/libwinpthread-1.dll $(TMPDIR_NAME)/
+	cp $(MINGW32)/lib/libgcc_s_sjlj-1.dll $(TMPDIR_NAME)/
+	cp $(MINGW32)/bin/libwinpthread-1.dll $(TMPDIR_NAME)/
 	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
 	$(call add_extra_files_to_package)
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
 	rm -rf $(TMPDIR_NAME)
 
+
+package_win_linux:
+	MINGW32=/usr/i686-w64-mingw32
+	WIN_SDL2=/usr/i686-w64-mingw32
+	(cd ../x16-rom/; make clean all)
+	CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
+	rm -rf $(TMPDIR_NAME) x16emu_win.zip
+	mkdir $(TMPDIR_NAME)
+	cp x16emu.exe $(TMPDIR_NAME)
+	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
+	$(call add_extra_files_to_package)
+	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
+	rm -rf $(TMPDIR_NAME)
+
+package_win_sound_linux:
+	MINGW32=/usr/i686-w64-mingw32
+	WIN_SDL2=/usr/i686-w64-mingw32
+	(cd ../x16-rom/; make clean all)
+	WITH_YM2151=1 CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
+	rm -rf $(TMPDIR_NAME) x16emu_win.zip
+	mkdir $(TMPDIR_NAME)
+	cp x16emu.exe $(TMPDIR_NAME)
+	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
+	$(call add_extra_files_to_package)
+	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
+
 package_linux:
 	(cd ../x16-rom/; make clean all)
-	ssh $(LINUX_COMPILE_HOST) "cd $(LINUX_BASE_DIR); make clean all"
+	make clean all
+	rm -rf $(TMPDIR_NAME) x16emu_linux.zip
+	mkdir $(TMPDIR_NAME)
+	cp x16emu $(TMPDIR_NAME)
+	$(call add_extra_files_to_package)
+	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_linux.zip" *)
+	rm -rf $(TMPDIR_NAME)
+
+package_linux_sound:
+	(cd ../x16-rom/; make clean all)
+	WITH_YM2151=1 make clean all
 	rm -rf $(TMPDIR_NAME) x16emu_linux.zip
 	mkdir $(TMPDIR_NAME)
 	cp x16emu $(TMPDIR_NAME)
