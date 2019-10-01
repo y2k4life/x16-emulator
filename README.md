@@ -147,7 +147,7 @@ make package_linux
 For Linux with sound
 
 ``` shell
-make package_sound_linux
+make package_linux_sound
 ```
 
 ## Changes made to original repository
