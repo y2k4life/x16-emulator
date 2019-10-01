@@ -139,8 +139,6 @@ package_win_mac:
 
 
 package_win_linux:
-	MINGW32=/usr/i686-w64-mingw32
-	WIN_SDL2=/usr/i686-w64-mingw32
 	(cd ../x16-rom/; make clean all)
 	CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
@@ -152,8 +150,6 @@ package_win_linux:
 	rm -rf $(TMPDIR_NAME)
 
 package_win_sound_linux:
-	MINGW32=/usr/i686-w64-mingw32
-	WIN_SDL2=/usr/i686-w64-mingw32
 	(cd ../x16-rom/; make clean all)
 	WITH_YM2151=1 CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
