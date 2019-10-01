@@ -144,7 +144,7 @@ package_win_linux:
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
 	mkdir $(TMPDIR_NAME)
 	cp x16emu.exe $(TMPDIR_NAME)
-	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
+	cp /usr/i686-w64-mingw32/bin/SDL2.dll $(TMPDIR_NAME)/
 	$(call add_extra_files_to_package)
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
 	rm -rf $(TMPDIR_NAME)
@@ -155,7 +155,7 @@ package_win_sound_linux:
 	rm -rf $(TMPDIR_NAME) x16emu_win.zip
 	mkdir $(TMPDIR_NAME)
 	cp x16emu.exe $(TMPDIR_NAME)
-	cp $(WIN_SDL2)/bin/SDL2.dll $(TMPDIR_NAME)/
+	cp /usr/i686-w64-mingw32/bin/SDL2.dll $(TMPDIR_NAME)/
 	$(call add_extra_files_to_package)
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
 

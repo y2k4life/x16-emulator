@@ -129,13 +129,13 @@ WITH_YM2151=1 make clean all
 To package the emulator for Windows. This will create the x16emu_win.zip which can be copied to the host Windows computer e.g `cp x16emu.exe /mnt/d/x16emu_win.zip`.
 
 ``` shell
-CROSS_COMPILE_WINDOWS=1 CROSS_COMPILE_WITH_LINUX=1 make package_win_linux
+make package_win_linux
 ```
 
 For Windows with sound
 
 ``` shell
-CROSS_COMPILE_WINDOWS=1 CROSS_COMPILE_WITH_LINUX=1 WITH_YM2151=1 make package_win_sound_linux
+make package_win_sound_linux
 ```
 
 For Linux
