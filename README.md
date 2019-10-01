@@ -101,13 +101,13 @@ cd ..
 The following command will build the emulator for Windows. This will create `x16emu.exe` which can then be copied to a Windows computer e.g Using WSL `cp x16emu.exe /mnt/d/x16emu.exe`.
 
 ``` shell
-CROSS_COMPILE_WINDOWS=1 CROSS_COMPILE_WITH_LINUX=1 make clean all
+make windows
 ```
 
 To build for Windows with sound
 
 ```  shell
-CROSS_COMPILE_WINDOWS=1 CROSS_COMPILE_WITH_LINUX=1 WITH_YM2151=1 make clean all
+make windows_sound
 ```
 
 To build for Linux
@@ -201,7 +201,18 @@ else
 endif
 ```
 
-This process can be cleaned up further.
+## Add Windows build
+
+``` makefile
+windows:
+        CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
+
+windows_sound:
+        CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 WITH_YM2151=1 make clean all
+```
+
+
+## Packaging
 
 Cloned the `pakcage_win` and create one for Mac `_mac` and one for `_linux`. Removed commands that copies files that don't exist. The processes still works without these files. Add vairables to indicate building with Linux
 

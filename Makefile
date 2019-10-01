@@ -65,6 +65,11 @@ all: $(OBJS) $(HEADERS)
 cpu/tables.h cpu/mnemonics.h: cpu/buildtables.py cpu/6502.opcodes cpu/65c02.opcodes
 	cd cpu && python buildtables.py
 
+windows:
+	CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 make clean all
+
+windows_sound:
+	CROSS_COMPILE_WITH_LINUX=1 CROSS_COMPILE_WINDOWS=1 WITH_YM2151=1 make clean all
 
 # WebASssembly/emscripten target
 #
@@ -136,7 +141,6 @@ package_win_mac:
 	$(call add_extra_files_to_package)
 	(cd $(TMPDIR_NAME)/; zip -r "../x16emu_win.zip" *)
 	rm -rf $(TMPDIR_NAME)
-
 
 package_win_linux:
 	(cd ../x16-rom/; make clean all)
