@@ -27,6 +27,7 @@
 #include "utf8.h"
 #include "joystick.h"
 #include "utf8_encode.h"
+#include "rom_symbols.h"
 #ifdef WITH_YM2151
 #include "ym2151.h"
 #endif
@@ -60,7 +61,7 @@ char *keymaps[] = {
 	"pt-br",
 };
 
-bool debuger_enabled = false;
+bool debugger_enabled = false;
 char *paste_text = NULL;
 char paste_text_data[65536];
 bool pasting_bas = false;
@@ -76,7 +77,7 @@ bool dump_bank = true;
 bool dump_vram = false;
 echo_mode_t echo_mode;
 bool save_on_exit = true;
-bool record_gif = false;
+uint8_t record_gif = RECORD_GIF_DISABLED;
 char *gif_path = NULL;
 uint8_t keymap = 0; // KERNAL's default
 int window_scale = 1;
@@ -304,8 +305,12 @@ usage()
 	printf("-log {K|S|V}...\n");
 	printf("\tEnable logging of (K)eyboard, (S)peed, (V)ideo.\n");
 	printf("\tMultiple characters are possible, e.g. -log KS\n");
-	printf("-gif <file.gif>\n");
+	printf("-gif <file.gif>[,wait]\n");
 	printf("\tRecord a gif for the video output.\n");
+	printf("\tUse ,wait to start paused.\n");
+	printf("\tPOKE $9FB5,2 to start recording.\n");
+	printf("\tPOKE $9FB5,1 to capture a single frame.\n");
+	printf("\tPOKE $9FB5,0 to pause.\n");
 	printf("-scale {1|2|3|4}\n");
 	printf("\tScale output to an integer multiple of 640x480\n");
 	printf("-quality {nearest|linear|best}\n");
@@ -579,7 +584,8 @@ main(int argc, char **argv)
 		} else if (!strcmp(argv[0], "-gif")) {
 			argc--;
 			argv++;
-			record_gif = true;
+			// set up for recording
+			record_gif = RECORD_GIF_PAUSED;
 			if (!argc || argv[0][0] == '-') {
 				usage();
 			}
@@ -589,7 +595,7 @@ main(int argc, char **argv)
 		} else if (!strcmp(argv[0], "-debug")) {
 			argc--;
 			argv++;
-			debuger_enabled = true;
+			debugger_enabled = true;
 			if (argc && argv[0][0] != '-') {
 				DEBUGSetBreakPoint((uint16_t)strtol(argv[0], NULL, 16));
 				argc--;
@@ -784,7 +790,7 @@ emulator_loop(void *param)
 {
 	for (;;) {
 
-		if (debuger_enabled) {
+		if (debugger_enabled) {
 			int dbgCmd = DEBUGGetCurrentStatus();
 			if (dbgCmd > 0) continue;
 			if (dbgCmd < 0) break;
@@ -829,7 +835,7 @@ emulator_loop(void *param)
 #endif
 
 #ifdef LOAD_HYPERCALLS
-		if ((pc == 0xffd5 || pc == 0xffd8) && is_kernal() && RAM[0xba] == 1) {
+		if ((pc == 0xffd5 || pc == 0xffd8) && is_kernal() && RAM[FA] == 1) {
 			if (pc == 0xffd5) {
 				LOAD();
 			} else {
@@ -962,8 +968,8 @@ emulator_loop(void *param)
 				prg_file = NULL;
 				if (start == 0x0801) {
 					// set start of variables
-					RAM[0x2d] = end & 0xff;
-					RAM[0x2e] = end >> 8;
+					RAM[VARTAB] = end & 0xff;
+					RAM[VARTAB + 1] = end >> 8;
 				}
 
 				if (run_after_load) {
@@ -982,7 +988,7 @@ emulator_loop(void *param)
 			}
 		}
 
-		while (pasting_bas && RAM[0xc6] < 10) {
+		while (pasting_bas && RAM[NDX] < 10) {
 			uint32_t c;
 			int e = 0;
 
@@ -996,8 +1002,8 @@ emulator_loop(void *param)
 				c = iso8859_15_from_unicode(c);
 			}
 			if (c && !e) {
-				RAM[0x0277 + RAM[0xc6]] = c;
-				RAM[0xc6]++;
+				RAM[KEYD + RAM[NDX]] = c;
+				RAM[NDX]++;
 			} else {
 				pasting_bas = false;
 				paste_text = NULL;
